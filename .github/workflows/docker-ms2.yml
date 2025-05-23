@@ -1,10 +1,10 @@
-name: Build ms1 Docker Image
+name: Build ms2 Docker Image
 
 on:
   push:
     branches: [ "main" ]
     paths:
-      - 'microservice1/**'
+      - 'microservice2/**'
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
   ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
@@ -41,6 +41,5 @@ jobs:
         uses: aws-actions/amazon-ecr-login@62f4f872db3836360b72999f4b87f1ff13310f3a
 
       - name: Push image
-        working-directory: ms1
         run: docker push $ECR_REGISTRY/elad/ms2:$VERSION .
 
