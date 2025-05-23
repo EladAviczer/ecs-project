@@ -31,7 +31,6 @@ func (basics BucketBasics) UploadMessageJSON(ctx context.Context, bucketName str
 		return err
 	}
 
-	// Optional: Wait for confirmation it's available (can skip if not critical)
 	err = s3.NewObjectExistsWaiter(basics.S3Client).Wait(
 		ctx,
 		&s3.HeadObjectInput{Bucket: aws.String(bucketName), Key: aws.String(objectKey)},
