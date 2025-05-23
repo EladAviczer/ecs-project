@@ -18,7 +18,7 @@ jobs:
 
       - name: Build image
         working-directory: ms2
-        run: docker build -t ms2:${{ github.sha }} .
+        run: docker build -t $ECR_REGISTRY/elad/ms2:${{ github.sha }} .
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@0.28.0
@@ -42,5 +42,5 @@ jobs:
         uses: aws-actions/amazon-ecr-login@62f4f872db3836360b72999f4b87f1ff13310f3a
 
       - name: Push image
-        run: docker push $ECR_REGISTRY/elad/ms2:$VERSION .
+        run: docker push $ECR_REGISTRY/elad/ms2:${{ github.sha }}
 
