@@ -90,7 +90,9 @@ resource "aws_iam_policy" "sqs_push_delete_policy" {
           "sqs:SendMessage",
           "sqs:DeleteMessage",
           "sqs:ReceiveMessage",
-          "sqs:GetQueueAttributes"
+          "sqs:GetQueueAttributes",
+          "sqs:GetQueueUrl"
+
         ]
         Resource = aws_sqs_queue.queue.arn
       }
@@ -115,7 +117,9 @@ resource "aws_iam_policy" "ssm_read_all_parameters" {
         Action = [
           "ssm:GetParameter",
           "ssm:GetParameters",
-          "ssm:GetParametersByPath"
+          "ssm:GetParametersByPath",
+          "kms:Decrypt"
+
         ],
         Resource = "*"
       }
@@ -125,4 +129,26 @@ resource "aws_iam_policy" "ssm_read_all_parameters" {
 resource "aws_iam_role_policy_attachment" "parameter_read" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = aws_iam_policy.ssm_read_all_parameters.arn
+}
+resource "aws_iam_policy" "ecs_log_policy" {
+  name = "ecs-logs"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "logs_write" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = aws_iam_policy.ecs_log_policy.arn
 }

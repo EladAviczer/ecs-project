@@ -6,7 +6,7 @@ module "vpc" {
 
   name           = "${var.cluster_name}-vpc"
   cidr           = "10.0.0.0/16"
-  azs            = ["us-west-1a", "us-west-1b"]
+  azs            = ["euc1-az1", "euc1-az2"]
   public_subnets = ["10.0.101.0/24", "10.0.102.0/24"]
 
   #   enable_nat_gateway      = true

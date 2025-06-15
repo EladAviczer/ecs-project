@@ -1,5 +1,5 @@
 variable "region" {
-  default = "us-west-1"
+  default = "eu-central-1"
 }
 variable "cluster_name" {
   default = "eladik"
@@ -24,4 +24,7 @@ variable "ssm_parameter_value" {
   sensitive = true
   default   = "zor"
 
+}
+variable "bucket_name" {
+  default = "zorkipongidongi"
 }

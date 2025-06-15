@@ -21,15 +21,23 @@ resource "aws_ecs_cluster" "my_cluster" {
 }
 
 resource "aws_ecs_task_definition" "apps" {
-  family             = "ms1"
-  network_mode       = "awsvpc"
-  execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
+  family                   = "ms1"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_execution_role.arn
+  runtime_platform {
+    cpu_architecture        = "X86_64"
+    operating_system_family = "LINUX"
+  }
   container_definitions = jsonencode([
     {
-      name      = "ms1"
-      image     = var.image1name
-      cpu       = 10
-      memory    = 256
+      name  = "ms1"
+      image = var.image1name
+      # cpu       = 10
+      # memory    = 256
       essential = true
       secrets = [
         {
@@ -38,25 +46,44 @@ resource "aws_ecs_task_definition" "apps" {
         }
       ]
       Environment = [
-        { "name" : "QUEUE_NAME", "value" : var.queue_name }
+        { name : "QUEUE_NAME", value : var.queue_name },
+        { name : "AWS_REGION", value : "eu-central-1" }
       ],
-      #   portMappings = [
-      #     {
-      #       containerPort = 8080
-      #       hostPort      = 8080
-      #     }
-      #   ]
+      portMappings = [
+        {
+          containerPort = 8080
+          hostPort      = 8080
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.ecs_logs.name
+          awslogs-region        = var.region
+          awslogs-stream-prefix = "ecs"
+        }
+      }
+
     },
     {
-      name      = "ms2"
-      image     = var.image2name
-      cpu       = 10
-      memory    = 256
-      essential = true
+      name  = "ms2"
+      image = var.image2name
+      # essential = true
       Environment = [
-        { "name" : "QUEUE_NAME", "value" : var.queue_name },
-        { "name" : "S3_BUCKET", "value" : aws_s3_bucket.bucket.bucket_regional_domain_name }
+        { name : "QUEUE_NAME", value : var.queue_name },
+        { name : "S3_BUCKET", value : aws_s3_bucket.bucket.id },
+        { name : "AWS_REGION", value : "eu-central-1" }
+
       ],
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.ecs_logs.name
+          awslogs-region        = var.region
+          awslogs-stream-prefix = "ecs"
+        }
+      }
+
 
     }
   ])
@@ -67,9 +94,13 @@ resource "aws_ecs_service" "apps" {
   cluster         = aws_ecs_cluster.my_cluster.id
   task_definition = aws_ecs_task_definition.apps.arn
   desired_count   = 1
-  #   iam_role        = aws_iam_role.ecs_task_execution_role.arn
-  #   depends_on      = [aws_iam_role_policy.ecs_task_execution_role]
+  launch_type     = "FARGATE"
 
+  network_configuration {
+    subnets          = module.vpc.public_subnets
+    security_groups  = [aws_security_group.ecs_sg.id]
+    assign_public_ip = true
+  }
 
   load_balancer {
     target_group_arn = aws_lb_target_group.ms1_tg.arn
